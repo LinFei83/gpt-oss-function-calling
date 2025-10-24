@@ -154,8 +154,10 @@ class ChatClient:
             
             # 收集完整响应
             full_content = ""
+            full_reasoning_content = ""
             full_message = {"role": "assistant", "content": ""}
             tool_calls_data = []
+            has_reasoning = False
             
             self.logger.info("流式输出:")
             self.logger.info("-" * 60)
@@ -183,10 +185,22 @@ class ChatClient:
                     if "choices" in chunk and len(chunk["choices"]) > 0:
                         delta = chunk["choices"][0].get("delta", {})
                         
+                        # 处理思考内容（reasoning_content）
+                        if "reasoning_content" in delta and delta["reasoning_content"]:
+                            reasoning_piece = delta["reasoning_content"]
+                            full_reasoning_content += reasoning_piece
+                            if not has_reasoning:
+                                print("\n\n[思考过程]:\n", flush=True)
+                                has_reasoning = True
+                            print(reasoning_piece, end='', flush=True)
+                        
                         # 处理内容增量
                         if "content" in delta and delta["content"]:
                             content_piece = delta["content"]
                             full_content += content_piece
+                            if has_reasoning and full_reasoning_content:
+                                print("\n\n[实际回复]:\n", flush=True)
+                                has_reasoning = False  # 防止重复打印标题
                             print(content_piece, end='', flush=True)
                         
                         # 处理工具调用
@@ -217,11 +231,15 @@ class ChatClient:
                     self.logger.error(f"解析流式数据失败: {e}")
                     continue
             
+            print("\n", flush=True)  # 确保最后换行
             self.logger.info("-" * 60)
             
             # 构建完整的响应消息
             if full_content:
                 full_message["content"] = full_content
+            
+            if full_reasoning_content:
+                full_message["reasoning_content"] = full_reasoning_content
             
             if tool_calls_data:
                 full_message["tool_calls"] = tool_calls_data
@@ -252,6 +270,14 @@ class ChatClient:
         message = result["choices"][0]["message"]
         self.logger.info("模型响应:")
         self.logger.info(f"角色: {message.get('role')}")
+        
+        # 显示思考内容（如果有）
+        if "reasoning_content" in message and message["reasoning_content"]:
+            self.logger.info("=" * 60)
+            self.logger.info("[思考过程]:")
+            self.logger.info(message["reasoning_content"])
+            self.logger.info("=" * 60)
+        
         return message
     
     def _has_tool_calls(self, message: Dict) -> bool:
