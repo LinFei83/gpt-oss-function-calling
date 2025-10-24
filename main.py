@@ -3,8 +3,9 @@
 演示如何使用模块化的函数调用系统
 """
 from chat_client import ChatClient
-from tool_definitions import TOOLS
 from logger import setup_default_logger, INFO
+import tools  # 导入以触发工具注册
+from tool_groups import initialize_tool_groups, get_tools_for_groups
 
 
 def example_with_custom_params():
@@ -26,6 +27,15 @@ def example_with_custom_params():
     logger.info("自定义参数示例（流式输出）")
     logger.info("=" * 60)
     
+    # 初始化工具分组配置
+    initialize_tool_groups()
+    
+    # 获取需要的工具分组（可以指定多个分组，会自动去重）
+    tools_to_use = get_tools_for_groups(['math'])  # 使用数学工具分组
+    
+    logger.info(f"使用工具分组: ['math']")
+    logger.info(f"工具数量: {len(tools_to_use)}")
+    
     messages = [
         {
             "role": "user",
@@ -45,7 +55,7 @@ def example_with_custom_params():
     #    - "high": 深度思考，会有更详细的推理过程
     final_response = client.chat(
         messages=messages, 
-        tools=TOOLS,
+        tools=tools_to_use,  # 使用从分组获取的工具
         reasoning_effort="low", # low, medium, high - 可以改为 "high" 查看更多思考内容
         model_identity="你是一个专业的数学助手，擅长处理各种计算和随机数生成任务",
         stream=True

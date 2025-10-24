@@ -3,21 +3,23 @@
 演示如何实现持续的对话交互，保持对话历史，并支持多种命令
 """
 from chat_client import ChatClient
-from tool_definitions import TOOLS
 from logger import setup_default_logger, INFO
+import tools  # 导入以触发工具注册
+from tool_groups import initialize_tool_groups, get_tools_for_groups
 import json
 
 
 class MultiTurnChat:
     """多轮对话管理器"""
     
-    def __init__(self, stream=True, reasoning_effort="low"):
+    def __init__(self, stream=True, reasoning_effort="low", tool_groups=None):
         """
         初始化多轮对话管理器
         
         参数:
             stream: 是否使用流式输出
             reasoning_effort: 推理努力程度（low/medium/high）
+            tool_groups: 要使用的工具分组列表，默认使用 ['all']
         """
         self.logger = setup_default_logger(level=INFO)
         self.client = ChatClient()
@@ -25,6 +27,15 @@ class MultiTurnChat:
         self.stream = stream
         self.reasoning_effort = reasoning_effort
         self.running = True
+        
+        # 初始化工具分组配置
+        initialize_tool_groups()
+        
+        # 获取要使用的工具
+        if tool_groups is None:
+            tool_groups = ['all']
+        self.tools = get_tools_for_groups(tool_groups)
+        self.tool_groups = tool_groups
         
     def add_user_message(self, content: str):
         """添加用户消息到对话历史"""
@@ -38,6 +49,8 @@ class MultiTurnChat:
         print("\n" + "=" * 60)
         print("欢迎使用多轮对话系统")
         print("=" * 60)
+        print(f"\n使用工具分组: {self.tool_groups}")
+        print(f"可用工具数量: {len(self.tools)}")
         print("\n可用命令：")
         print("  /help     - 显示帮助信息")
         print("  /history  - 显示对话历史")
@@ -140,7 +153,7 @@ class MultiTurnChat:
         # 发送请求并获取响应
         response = self.client.chat(
             messages=self.messages,
-            tools=TOOLS,
+            tools=self.tools,  # 使用初始化时配置的工具
             reasoning_effort=self.reasoning_effort,
             model_identity="你是一个友好的AI助手，可以使用各种工具来帮助用户解决问题。",
             stream=self.stream

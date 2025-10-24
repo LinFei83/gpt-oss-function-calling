@@ -1,0 +1,43 @@
+# 工具分组配置文件
+# 
+# 说明：
+# - 每个分组包含一个或多个工具名称
+# - 一个工具可以属于多个分组
+# - 使用时可以指定多个分组，系统会自动去重
+# - 工具名称必须与 @tool 装饰器注册的工具名称一致
+
+# 数学计算相关工具
+math:
+  - get_random_number  # 生成随机数
+  - calculate          # 执行基本数学运算
+
+# 时间相关工具
+time:
+  - get_current_time   # 获取当前时间
+
+# 所有基础工具
+basic:
+  - get_random_number
+  - get_current_time
+  - calculate
+
+# 完整工具集（包含所有工具）
+all:
+  - get_random_number
+  - get_current_time
+  - calculate
+
+# 示例：可以创建更多自定义分组
+# web:
+#   - search_web
+#   - get_url_content
+#
+# text_processing:
+#   - format_text
+#   - calculate_average
+#
+# mixed:
+#   - get_random_number
+#   - format_text
+#   - search_web
+

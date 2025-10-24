@@ -4,15 +4,17 @@
 """
 import random
 from datetime import datetime
+from tool_decorator import tool, AVAILABLE_FUNCTIONS
 
 
-def get_random_number(min_value=0, max_value=100):
+@tool()
+def get_random_number(min_value: int = 0, max_value: int = 100):
     """
-    生成一个随机数
+    生成一个指定范围内的随机整数
     
     参数:
-        min_value: 最小值（默认为0）
-        max_value: 最大值（默认为100）
+        min_value: 随机数的最小值
+        max_value: 随机数的最大值
     
     返回:
         随机整数
@@ -20,9 +22,10 @@ def get_random_number(min_value=0, max_value=100):
     return random.randint(min_value, max_value)
 
 
+@tool()
 def get_current_time():
     """
-    获取当前时间
+    获取当前的日期和时间
     
     返回:
         当前时间的字符串表示
@@ -30,9 +33,10 @@ def get_current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def calculate(operation, num1, num2):
+@tool()
+def calculate(operation: str, num1: float, num2: float):
     """
-    执行简单的数学运算
+    执行基本的数学运算（加、减、乘、除）
     
     参数:
         operation: 运算类型（add, subtract, multiply, divide）
@@ -52,10 +56,6 @@ def calculate(operation, num1, num2):
     return operations_map.get(operation, lambda: "错误：不支持的运算类型")()
 
 
-# 函数映射表
-AVAILABLE_FUNCTIONS = {
-    "get_random_number": get_random_number,
-    "get_current_time": get_current_time,
-    "calculate": calculate
-}
+# 导出 AVAILABLE_FUNCTIONS（从 tool_decorator 导入）
+__all__ = ['AVAILABLE_FUNCTIONS', 'get_random_number', 'get_current_time', 'calculate']
 

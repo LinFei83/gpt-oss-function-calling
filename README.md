@@ -10,17 +10,20 @@
 - 完善的日志系统，支持彩色输出
 - 自动处理多轮对话和工具调用迭代
 - 内置三个示例工具函数
+- 提供 `@tool` 装饰器，自动生成工具定义和注册
 
 ## 项目结构
 
 ```
 Function Calling/
 ├── main.py                      # 单次对话示例
-├── multi_turn_chat.py          # 多轮对话示例（新增）
+├── multi_turn_chat.py          # 多轮对话示例
 ├── chat_client.py              # 聊天客户端，处理 API 通信
+├── tool_decorator.py           # 工具装饰器模块（新增）
 ├── tool_definitions.py         # 工具定义（OpenAI 格式）
 ├── tools.py                    # 工具函数实现
 ├── logger.py                   # 日志模块
+├── example_tool_usage.py       # 装饰器使用示例（新增）
 └── openai-gpt-oss-120b.jinja   # 聊天模板文件
 ```
 
@@ -35,18 +38,29 @@ Function Calling/
 - 处理多轮对话迭代
 - 支持流式和非流式输出
 
-### 2. tool_definitions.py - 工具定义
+### 2. tool_decorator.py - 工具装饰器
+
+提供 `@tool` 装饰器，自动化工具注册过程：
+- 自动从类型注解生成 JSON Schema 参数定义
+- 从 docstring 提取工具和参数描述
+- 支持自定义工具名称和描述
+- 自动识别必需参数和可选参数
+- 维护 `AVAILABLE_FUNCTIONS` 和 `TOOLS` 注册表
+
+### 3. tool_definitions.py - 工具定义
 
 使用 OpenAI 标准格式定义工具函数：
 - `get_random_number`: 生成指定范围内的随机整数
 - `get_current_time`: 获取当前日期和时间
 - `calculate`: 执行基本数学运算（加减乘除）
 
-### 3. tools.py - 工具实现
+现在由装饰器自动生成，只需导入 `tools` 模块即可。
 
-包含所有工具函数的具体实现逻辑。
+### 4. tools.py - 工具实现
 
-### 4. logger.py - 日志系统
+包含所有工具函数的具体实现逻辑，使用 `@tool` 装饰器自动注册。
+
+### 5. logger.py - 日志系统
 
 提供统一的日志记录功能：
 - 支持多种日志级别（DEBUG, INFO, WARNING, ERROR, CRITICAL）
@@ -124,7 +138,64 @@ client = ChatClient(
 
 ### 自定义工具函数
 
-#### 步骤 1: 在 tools.py 中添加函数实现
+项目支持两种方式添加工具函数：使用 `@tool` 装饰器（推荐）或手动注册。
+
+#### 方法 1: 使用 @tool 装饰器（推荐）
+
+使用 `@tool` 装饰器可以自动完成工具注册和定义生成，大大简化开发流程：
+
+```python
+from tool_decorator import tool
+
+@tool()
+def your_function(param1: str, param2: int = 0):
+    """
+    函数功能描述
+    
+    参数:
+        param1: 参数1说明
+        param2: 参数2说明
+    
+    返回:
+        返回值说明
+    """
+    # 实现逻辑
+    return result
+```
+
+装饰器会自动：
+- 从函数名生成工具名称
+- 从 docstring 提取工具描述和参数说明
+- 从类型注解自动推断参数类型（支持 `int`, `float`, `str`, `bool`, `list`, `dict`）
+- 识别必需参数和可选参数（有默认值的参数为可选）
+- 注册函数到 `AVAILABLE_FUNCTIONS`
+- 生成工具定义到 `TOOLS`
+
+支持的类型注解：
+- `int` → JSON Schema `integer`
+- `float` → JSON Schema `number`
+- `str` → JSON Schema `string`
+- `bool` → JSON Schema `boolean`
+- `list` → JSON Schema `array`
+- `dict` → JSON Schema `object`
+- `Optional[T]` 会被正确处理为可选参数
+
+自定义工具名称和描述：
+
+```python
+@tool(name="custom_name", description="自定义描述")
+def my_function(x: float):
+    """这个 docstring 会被忽略"""
+    return x * 2
+```
+
+完整示例请参考 `example_tool_usage.py`。
+
+#### 方法 2: 手动注册（传统方式）
+
+如果需要更精细的控制，可以手动注册工具：
+
+**步骤 1: 在 tools.py 中添加函数实现**
 
 ```python
 def your_function(param1, param2):
@@ -139,7 +210,7 @@ AVAILABLE_FUNCTIONS = {
 }
 ```
 
-#### 步骤 2: 在 tool_definitions.py 中添加工具定义
+**步骤 2: 在 tool_definitions.py 中添加工具定义**
 
 ```python
 TOOLS = [
