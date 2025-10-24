@@ -190,7 +190,7 @@ class ChatClient:
                             reasoning_piece = delta["reasoning_content"]
                             full_reasoning_content += reasoning_piece
                             if not has_reasoning:
-                                print("\n\n[思考过程]:\n", flush=True)
+                                print("[思考过程]:\n", flush=True)
                                 has_reasoning = True
                             print(reasoning_piece, end='', flush=True)
                         
@@ -271,12 +271,12 @@ class ChatClient:
         self.logger.info("模型响应:")
         self.logger.info(f"角色: {message.get('role')}")
         
-        # 显示思考内容（如果有）
-        if "reasoning_content" in message and message["reasoning_content"]:
-            self.logger.info("=" * 60)
-            self.logger.info("[思考过程]:")
-            self.logger.info(message["reasoning_content"])
-            self.logger.info("=" * 60)
+        # # 显示思考内容（如果有）
+        # if "reasoning_content" in message and message["reasoning_content"]:
+        #     self.logger.info("=" * 60)
+        #     self.logger.info("[思考过程]:")
+        #     self.logger.info(message["reasoning_content"])
+        #     self.logger.info("=" * 60)
         
         return message
     

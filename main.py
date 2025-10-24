@@ -46,7 +46,7 @@ def example_with_custom_params():
     final_response = client.chat(
         messages=messages, 
         tools=TOOLS,
-        reasoning_effort="high", # low, medium, high - 可以改为 "high" 查看更多思考内容
+        reasoning_effort="low", # low, medium, high - 可以改为 "high" 查看更多思考内容
         model_identity="你是一个专业的数学助手，擅长处理各种计算和随机数生成任务",
         stream=True
     )
