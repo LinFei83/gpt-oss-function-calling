@@ -29,7 +29,7 @@ def example_with_custom_params():
     messages = [
         {
             "role": "user",
-            "content": "帮我产生三个随机数, 0-10"
+            "content": "帮我产生三个随机数, 随后将他们相乘"
         }
     ]
     
