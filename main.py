@@ -17,7 +17,7 @@ def example_with_custom_params():
     messages = [
         {
             "role": "user",
-            "content": "帮我产生三个随机数"
+            "content": "帮我产生十个随机数"
         }
     ]
     

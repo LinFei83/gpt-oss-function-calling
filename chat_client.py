@@ -27,7 +27,7 @@ class ChatClient:
         self.logger = Logger.get_logger("ChatClient")
     
     def chat(self, messages: List[Dict], tools: List[Dict], 
-             max_iterations: int = 5, 
+             max_iterations: int = 15, 
              reasoning_effort: str = "medium",
              model_identity: Optional[str] = None,
              builtin_tools: Optional[List[str]] = None,
