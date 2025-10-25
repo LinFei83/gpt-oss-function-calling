@@ -15,7 +15,12 @@ math:
 time:
   - get_current_time   # 获取当前时间
 
-# 所有基础工具
+# 主模型工具集（仅包含任务委派功能）
+# 主模型不直接执行具体任务，而是将任务委派给专门的代理
+coordinator:
+  - delegate_task      # 委派任务给专门的代理
+
+# 所有基础工具（不包含任务委派）
 basic:
   - get_random_number
   - get_current_time
@@ -26,6 +31,7 @@ all:
   - get_random_number
   - get_current_time
   - calculate
+  - delegate_task
 
 # 示例：可以创建更多自定义分组
 # web:

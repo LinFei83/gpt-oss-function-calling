@@ -6,10 +6,11 @@
 
 - 支持 OpenAI 格式的函数调用协议
 - 支持流式（Stream）和非流式输出模式
+- **主-子模型架构**：支持将子任务委派给独立的模型执行，减少主模型上下文消耗
 - 模块化的代码架构，易于扩展
 - 完善的日志系统，支持彩色输出
 - 自动处理多轮对话和工具调用迭代
-- 内置三个示例工具函数
+- 工具分组管理，可以灵活组合不同的工具集
 - 提供 `@tool` 装饰器，自动生成工具定义和注册
 
 ## 项目结构
@@ -21,19 +22,21 @@ Function Calling/
 │   ├── core/                   # 核心功能模块
 │   │   ├── __init__.py
 │   │   ├── chat_client.py      # 聊天客户端，处理 API 通信
+│   │   ├── subtask_executor.py # 子任务执行器，管理子模型
 │   │   └── logger.py           # 日志系统
 │   │
 │   └── tools/                  # 工具相关模块
 │       ├── __init__.py
 │       ├── decorator.py        # 工具装饰器
-│       ├── implementations.py  # 工具函数实现
+│       ├── implementations.py  # 工具函数实现（包含 create_subtask）
 │       └── groups.py           # 工具分组管理
 │
 ├── examples/                   # 示例代码
 │   ├── __init__.py
 │   ├── basic_usage.py          # 基本使用示例
 │   ├── multi_turn.py           # 多轮对话示例
-│   └── tool_usage.py           # 装饰器使用示例
+│   ├── tool_usage.py           # 装饰器使用示例
+│   └── master_subtask_demo.py  # 主-子模型架构示例
 │
 ├── config/                     # 配置文件
 │   └── tool_groups.yaml        # 工具分组配置
@@ -71,8 +74,17 @@ Function Calling/
 - `get_random_number`: 生成指定范围内的随机整数
 - `get_current_time`: 获取当前日期和时间
 - `calculate`: 执行基本数学运算（加减乘除）
+- `create_subtask`: 创建子任务并委派给独立的模型执行（主-子模型架构的核心）
 
 使用 `@tool` 装饰器自动注册。
+
+### 3.5. src/core/subtask_executor.py - 子任务执行器
+
+管理子任务的执行：
+- 接收主模型的子任务请求
+- 创建独立的子模型实例执行任务
+- 将执行结果返回给主模型
+- 保持子任务的上下文独立，不影响主任务
 
 ### 4. src/tools/groups.py - 工具分组管理
 
@@ -98,9 +110,68 @@ Python 版本要求：Python 3.7+
 
 ## 使用方法
 
+### 快速开始
+
+运行主程序：
+
+```bash
+python main.py
+```
+
+程序会提示选择运行模式：
+1. 主-子模型架构（推荐）- 可以将子任务委派给独立的模型
+2. 传统模式 - 直接执行所有任务
+
+### 主-子模型架构（新功能）
+
+主-子模型架构允许主模型将独立的子任务委派给专门的子模型执行，从而：
+- **减少主模型的上下文消耗**：子任务在独立的上下文中执行
+- **提高执行效率**：子模型专注于工具调用，减少冗长输出
+- **更好的任务组织**：将复杂任务分解为多个独立的子任务
+
+运行主-子模型示例：
+
+```bash
+python -m examples.master_subtask_demo
+```
+
+示例场景：
+1. 简单子任务委派
+2. 多个子任务协调
+3. 对比传统模式 vs 子任务模式
+
+使用方法：
+
+```python
+from src.core import ChatClient, setup_default_logger, INFO
+from src.tools import initialize_tool_groups, get_tools_for_groups
+
+# 初始化工具分组配置
+initialize_tool_groups()
+
+# 获取主模型工具集（包含 create_subtask）
+master_tools = get_tools_for_groups(['master'])
+
+messages = [
+    {
+        "role": "user",
+        "content": "生成三个随机数并相乘。请将计算任务委派给子任务。"
+    }
+]
+
+client = ChatClient()
+response = client.chat(
+    messages=messages,
+    tools=master_tools,
+    model_identity="你是一个任务协调助手，可以使用 create_subtask 委派子任务。"
+)
+```
+
+主模型会自动调用 `create_subtask` 工具，将计算任务委派给子模型，子模型完成后将结果返回给主模型。
+
 ### 基本使用
 
-运行主程序（单次对话示例）：
+运行基本示例：
 
 ```bash
 python -m examples.basic_usage
@@ -296,6 +367,8 @@ print(f"最终回复: {response}")
 
 ## 工作流程
 
+### 传统模式
+
 1. 用户发送消息给 AI
 2. AI 分析消息并决定是否需要调用工具
 3. 如果需要调用工具，AI 返回工具调用请求
@@ -303,6 +376,20 @@ print(f"最终回复: {response}")
 5. 将工具执行结果发送回 AI
 6. AI 根据工具结果生成最终回复
 7. 返回最终回复给用户
+
+### 主-子模型模式
+
+1. 用户发送消息给主模型
+2. 主模型分析任务，识别可以独立执行的子任务
+3. 主模型调用 `create_subtask` 工具
+4. 子任务执行器创建新的子模型实例
+5. 子模型在独立的上下文中执行任务（调用工具）
+6. 子模型返回执行结果
+7. 子任务结果作为工具调用结果返回给主模型
+8. 主模型整合子任务结果，生成最终回复
+9. 返回最终回复给用户
+
+优势：主模型的上下文不包含子任务的详细执行过程，保持简洁高效。
 
 ## 日志系统
 
@@ -338,6 +425,57 @@ logger.critical("严重错误")
 
 本项目仅供学习和演示使用。
 
+## 工具分组说明
+
+项目支持通过 YAML 配置文件管理工具分组：
+
+```yaml
+# config/tool_groups.yaml
+
+# 数学计算工具
+math:
+  - get_random_number
+  - calculate
+
+# 时间工具
+time:
+  - get_current_time
+
+# 子任务管理工具
+subtask:
+  - create_subtask
+
+# 主模型工具集（包含子任务管理）
+master:
+  - create_subtask
+  - get_random_number
+  - get_current_time
+  - calculate
+
+# 所有工具
+all:
+  - get_random_number
+  - get_current_time
+  - calculate
+  - create_subtask
+```
+
+使用方法：
+
+```python
+from src.tools import initialize_tool_groups, get_tools_for_groups
+
+# 初始化工具分组
+initialize_tool_groups()
+
+# 获取特定分组的工具
+math_tools = get_tools_for_groups(['math'])
+master_tools = get_tools_for_groups(['master'])
+
+# 可以组合多个分组（自动去重）
+combined_tools = get_tools_for_groups(['math', 'time'])
+```
+
 ## 常见问题
 
 ### Q: 如何处理工具函数执行错误？
@@ -355,6 +493,28 @@ A: 在创建 logger 时设置 level 参数，可选值：DEBUG, INFO, WARNING, E
 ### Q: 流式输出和非流式输出有什么区别？
 
 A: 流式输出会实时显示 AI 的响应内容（逐字输出），非流式输出会等待完整响应后一次性返回。流式输出提供更好的用户体验。
+
+### Q: 什么时候应该使用主-子模型架构？
+
+A: 适合以下场景：
+- 任务包含多个独立的子问题
+- 需要执行一系列复杂的工具调用
+- 希望减少主模型的上下文长度
+- 想要更好地组织和管理复杂任务
+
+### Q: 子任务可以创建更多的子任务吗？
+
+A: 技术上可以，但不推荐。过深的嵌套会增加复杂度。建议只使用一级子任务。
+
+### Q: 子任务的工具权限如何控制？
+
+A: 通过 `create_subtask` 的 `tool_groups` 参数指定子任务可以使用的工具分组。例如：
+```python
+create_subtask(
+    task_description="生成三个随机数并相乘",
+    tool_groups="math"  # 子任务只能使用 math 分组的工具
+)
+```
 
 ## 贡献
 

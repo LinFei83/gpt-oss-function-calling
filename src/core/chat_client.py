@@ -14,16 +14,19 @@ class ChatClient:
     """聊天 API 客户端"""
     
     def __init__(self, api_url: str = "http://192.168.0.19:8974/v1/chat/completions", 
-                 model: str = "gpt-oss-120b"):
+                 model: str = "gpt-oss-120b",
+                 task_name: str = "主任务"):
         """
         初始化客户端
         
         参数:
             api_url: API 服务器地址
             model: 模型名称
+            task_name: 任务名称，用于日志标识（如"主任务"、"数学代理"等）
         """
         self.api_url = api_url
         self.model = model
+        self.task_name = task_name
         self.logger = Logger.get_logger("ChatClient")
     
     def chat(self, messages: List[Dict], tools: List[Dict], 
@@ -343,7 +346,7 @@ class ChatClient:
     def _print_iteration_header(self, iteration: int):
         """打印迭代头部"""
         self.logger.info("=" * 60)
-        self.logger.info(f"第 {iteration} 轮对话")
+        self.logger.info(f"[{self.task_name}] 第 {iteration} 轮对话")
         self.logger.info("=" * 60)
     
     def _print_tool_call_info(self, tool_call_id: str, function_name: str, 
