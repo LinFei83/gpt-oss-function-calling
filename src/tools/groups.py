@@ -7,7 +7,7 @@ import os
 from typing import List
 
 
-DEFAULT_CONFIG_PATH = "tool_groups.yaml"
+DEFAULT_CONFIG_PATH = "config/tool_groups.yaml"
 
 
 def load_groups_from_yaml(config_path: str = DEFAULT_CONFIG_PATH) -> dict:
@@ -53,7 +53,7 @@ def initialize_tool_groups(config_path: str = DEFAULT_CONFIG_PATH):
     参数:
         config_path: 配置文件路径
     """
-    from tool_decorator import load_tool_groups
+    from src.tools.decorator import load_tool_groups
     
     groups_config = load_groups_from_yaml(config_path)
     load_tool_groups(groups_config)
@@ -71,7 +71,7 @@ def get_tools_for_groups(group_names: List[str]) -> List[dict]:
     返回:
         工具定义列表（OpenAI 格式），自动去重
     """
-    from tool_decorator import get_tools_by_groups
+    from src.tools.decorator import get_tools_by_groups
     return get_tools_by_groups(group_names)
 
 
@@ -85,7 +85,7 @@ def validate_groups(group_names: List[str]) -> tuple:
     返回:
         (valid_groups, invalid_groups) 元组
     """
-    from tool_decorator import get_available_groups
+    from src.tools.decorator import get_available_groups
     
     available_groups = get_available_groups()
     valid_groups = [g for g in group_names if g in available_groups]
@@ -95,7 +95,7 @@ def validate_groups(group_names: List[str]) -> tuple:
 
 
 if __name__ == "__main__":
-    import tools  # 导入以注册工具
+    from src.tools import implementations  # 导入以注册工具
     
     print("=" * 60)
     print("工具分组系统测试")

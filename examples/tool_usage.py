@@ -3,7 +3,7 @@
 
 本示例展示了如何使用 @tool 装饰器来简化工具的注册过程
 """
-from tool_decorator import tool, AVAILABLE_FUNCTIONS, get_all_tools
+from src.tools.decorator import tool, AVAILABLE_FUNCTIONS, get_all_tools
 from typing import Optional
 
 

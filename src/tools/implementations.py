@@ -4,7 +4,7 @@
 """
 import random
 from datetime import datetime
-from tool_decorator import tool, AVAILABLE_FUNCTIONS
+from src.tools.decorator import tool, AVAILABLE_FUNCTIONS
 
 
 @tool()

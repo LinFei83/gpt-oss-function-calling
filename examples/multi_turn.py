@@ -2,10 +2,9 @@
 多轮对话示例
 演示如何实现持续的对话交互，保持对话历史，并支持多种命令
 """
-from chat_client import ChatClient
-from logger import setup_default_logger, INFO
-import tools  # 导入以触发工具注册
-from tool_groups import initialize_tool_groups, get_tools_for_groups
+from src.core import ChatClient, setup_default_logger, INFO
+from src.tools import implementations  # 导入以触发工具注册
+from src.tools import initialize_tool_groups, get_tools_for_groups
 import json
 
 

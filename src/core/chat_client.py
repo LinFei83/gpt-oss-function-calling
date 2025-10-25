@@ -6,14 +6,14 @@ import json
 import requests
 from typing import List, Dict, Optional, Any
 
-from tools import AVAILABLE_FUNCTIONS
-from logger import Logger
+from src.tools import AVAILABLE_FUNCTIONS
+from src.core.logger import Logger
 
 
 class ChatClient:
     """聊天 API 客户端"""
     
-    def __init__(self, api_url: str = "http://192.168.0.18:8974/v1/chat/completions", 
+    def __init__(self, api_url: str = "http://192.168.0.19:8974/v1/chat/completions", 
                  model: str = "gpt-oss-120b"):
         """
         初始化客户端

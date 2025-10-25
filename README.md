@@ -16,20 +16,38 @@
 
 ```
 Function Calling/
-├── main.py                      # 单次对话示例
-├── multi_turn_chat.py          # 多轮对话示例
-├── chat_client.py              # 聊天客户端，处理 API 通信
-├── tool_decorator.py           # 工具装饰器模块（新增）
-├── tool_definitions.py         # 工具定义（OpenAI 格式）
-├── tools.py                    # 工具函数实现
-├── logger.py                   # 日志模块
-├── example_tool_usage.py       # 装饰器使用示例（新增）
-└── openai-gpt-oss-120b.jinja   # 聊天模板文件
+├── src/                        # 源代码目录
+│   ├── __init__.py
+│   ├── core/                   # 核心功能模块
+│   │   ├── __init__.py
+│   │   ├── chat_client.py      # 聊天客户端，处理 API 通信
+│   │   └── logger.py           # 日志系统
+│   │
+│   └── tools/                  # 工具相关模块
+│       ├── __init__.py
+│       ├── decorator.py        # 工具装饰器
+│       ├── implementations.py  # 工具函数实现
+│       └── groups.py           # 工具分组管理
+│
+├── examples/                   # 示例代码
+│   ├── __init__.py
+│   ├── basic_usage.py          # 基本使用示例
+│   ├── multi_turn.py           # 多轮对话示例
+│   └── tool_usage.py           # 装饰器使用示例
+│
+├── config/                     # 配置文件
+│   └── tool_groups.yaml        # 工具分组配置
+│
+├── templates/                  # 模板文件
+│   └── openai-gpt-oss-120b.jinja
+│
+├── requirements.txt            # 项目依赖
+└── README.md                   # 项目说明文档
 ```
 
 ## 核心模块说明
 
-### 1. chat_client.py - 聊天客户端
+### 1. src/core/chat_client.py - 聊天客户端
 
 负责与 AI API 服务器的通信，处理工具调用的完整流程：
 - 发送请求到 API 服务器
@@ -38,7 +56,7 @@ Function Calling/
 - 处理多轮对话迭代
 - 支持流式和非流式输出
 
-### 2. tool_decorator.py - 工具装饰器
+### 2. src/tools/decorator.py - 工具装饰器
 
 提供 `@tool` 装饰器，自动化工具注册过程：
 - 自动从类型注解生成 JSON Schema 参数定义
@@ -47,20 +65,20 @@ Function Calling/
 - 自动识别必需参数和可选参数
 - 维护 `AVAILABLE_FUNCTIONS` 和 `TOOLS` 注册表
 
-### 3. tool_definitions.py - 工具定义
+### 3. src/tools/implementations.py - 工具实现
 
-使用 OpenAI 标准格式定义工具函数：
+包含所有工具函数的具体实现逻辑：
 - `get_random_number`: 生成指定范围内的随机整数
 - `get_current_time`: 获取当前日期和时间
 - `calculate`: 执行基本数学运算（加减乘除）
 
-现在由装饰器自动生成，只需导入 `tools` 模块即可。
+使用 `@tool` 装饰器自动注册。
 
-### 4. tools.py - 工具实现
+### 4. src/tools/groups.py - 工具分组管理
 
-包含所有工具函数的具体实现逻辑，使用 `@tool` 装饰器自动注册。
+负责加载和管理工具分组配置，支持从 YAML 文件加载分组定义。
 
-### 5. logger.py - 日志系统
+### 5. src/core/logger.py - 日志系统
 
 提供统一的日志记录功能：
 - 支持多种日志级别（DEBUG, INFO, WARNING, ERROR, CRITICAL）
@@ -73,10 +91,10 @@ Function Calling/
 项目依赖以下 Python 库：
 
 ```bash
-pip install requests
+pip install -r requirements.txt
 ```
 
-Python 版本要求：Python 3.6+
+Python 版本要求：Python 3.7+
 
 ## 使用方法
 
@@ -85,7 +103,7 @@ Python 版本要求：Python 3.6+
 运行主程序（单次对话示例）：
 
 ```bash
-python main.py
+python -m examples.basic_usage
 ```
 
 ### 多轮对话示例
@@ -93,7 +111,7 @@ python main.py
 运行多轮对话程序，实现持续交互：
 
 ```bash
-python multi_turn_chat.py
+python -m examples.multi_turn
 ```
 
 多轮对话系统支持以下功能：
@@ -127,7 +145,7 @@ python multi_turn_chat.py
 
 ### 配置 API 服务器
 
-在 `chat_client.py` 中修改 API 地址：
+在 `src/core/chat_client.py` 中修改 API 地址：
 
 ```python
 client = ChatClient(
@@ -145,7 +163,7 @@ client = ChatClient(
 使用 `@tool` 装饰器可以自动完成工具注册和定义生成，大大简化开发流程：
 
 ```python
-from tool_decorator import tool
+from src.tools.decorator import tool
 
 @tool()
 def your_function(param1: str, param2: int = 0):
@@ -189,13 +207,13 @@ def my_function(x: float):
     return x * 2
 ```
 
-完整示例请参考 `example_tool_usage.py`。
+完整示例请参考 `examples/tool_usage.py`。
 
 #### 方法 2: 手动注册（传统方式）
 
 如果需要更精细的控制，可以手动注册工具：
 
-**步骤 1: 在 tools.py 中添加函数实现**
+**步骤 1: 在 src/tools/implementations.py 中添加函数实现**
 
 ```python
 def your_function(param1, param2):
@@ -210,41 +228,29 @@ AVAILABLE_FUNCTIONS = {
 }
 ```
 
-**步骤 2: 在 tool_definitions.py 中添加工具定义**
+**步骤 2: 使用 @tool 装饰器注册（推荐）**
 
 ```python
-TOOLS = [
-    # ... 现有工具
-    {
-        "type": "function",
-        "function": {
-            "name": "your_function",
-            "description": "函数功能描述",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "param1": {
-                        "type": "string",
-                        "description": "参数1说明"
-                    },
-                    "param2": {
-                        "type": "number",
-                        "description": "参数2说明"
-                    }
-                },
-                "required": ["param1", "param2"]
-            }
-        }
-    }
-]
+from src.tools.decorator import tool
+
+@tool()
+def your_function(param1: str, param2: float):
+    """
+    函数功能描述
+    
+    参数:
+        param1: 参数1说明
+        param2: 参数2说明
+    """
+    # 实现逻辑
+    return result
 ```
 
 ### 使用示例
 
 ```python
-from chat_client import ChatClient
-from tool_definitions import TOOLS
-from logger import setup_default_logger, INFO
+from src.core import ChatClient, setup_default_logger, INFO
+from src.tools import get_all_tools
 
 # 设置日志
 logger = setup_default_logger(level=INFO)
@@ -263,7 +269,7 @@ client = ChatClient()
 # 发起对话（流式输出）
 response = client.chat(
     messages=messages,
-    tools=TOOLS,
+    tools=get_all_tools(),
     reasoning_effort="low",
     model_identity="你是一个专业的数学助手",
     stream=True
@@ -303,7 +309,7 @@ print(f"最终回复: {response}")
 项目提供了完善的日志功能：
 
 ```python
-from logger import setup_default_logger, DEBUG
+from src.core import setup_default_logger, DEBUG
 
 # 创建日志器
 logger = setup_default_logger(

@@ -1,0 +1,8 @@
+# Function Calling 项目依赖
+
+# HTTP 请求库
+requests>=2.25.0
+
+# YAML 配置文件解析
+PyYAML>=5.4.0
+
