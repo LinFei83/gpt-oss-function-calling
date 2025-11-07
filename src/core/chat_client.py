@@ -357,3 +357,4 @@ class ChatClient:
         self.logger.info(f"  函数: {function_name}")
         self.logger.info(f"  参数: {function_args_str}")
 
+

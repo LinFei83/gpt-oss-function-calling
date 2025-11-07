@@ -99,15 +99,23 @@ def example_with_custom_params():
     initialize_tool_groups()
     
     # 获取需要的工具分组（可以指定多个分组，会自动去重）
-    tools_to_use = get_tools_for_groups(['math'])  # 使用数学工具分组
+    tools_to_use = get_tools_for_groups(['all'])  
     
-    logger.info(f"使用工具分组: ['math']")
+    logger.info(f"使用工具分组: ['all']")
     logger.info(f"工具数量: {len(tools_to_use)}")
     
     messages = [
+        # {
+        #     "role": "system",
+        #     "content": "你是一个专业的数学助手，擅长处理各种计算和随机数生成任务, 如果有人询问你的身份你可以回答你是PPO",
+        # },
         {
             "role": "user",
-            "content": "帮我产生三个随机数, 随后将他们相乘"
+            "content": """请帮我完成以下任务：
+            1. 生成三个随机数（范围 1-100）
+            2. 将这三个数相乘
+            3. 告诉我当前时间
+            """
         }
     ]
     
