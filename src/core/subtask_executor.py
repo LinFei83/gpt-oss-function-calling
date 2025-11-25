@@ -24,7 +24,8 @@ class SubTaskExecutor:
     
     def __init__(self, api_url: str = "http://192.168.0.19:8974/v1/chat/completions",
                  model: str = "gpt-oss-120b",
-                 agents_config_path: str = "config/agents.yaml"):
+                 agents_config_path: str = "config/agents.yaml",
+                 api_key: str = "sk-145253"):
         """
         初始化子任务执行器
         
@@ -32,9 +33,11 @@ class SubTaskExecutor:
             api_url: API 服务器地址
             model: 模型名称
             agents_config_path: 代理配置文件路径
+            api_key: API 密钥
         """
         self.api_url = api_url
         self.model = model
+        self.api_key = api_key
         self.logger = Logger.get_logger("SubTaskExecutor")
         
         # 加载代理配置
@@ -144,7 +147,8 @@ class SubTaskExecutor:
         client = ChatClient(
             api_url=self.api_url, 
             model=self.model,
-            task_name=agent_name  # 使用代理名称作为任务标识
+            task_name=agent_name,  # 使用代理名称作为任务标识
+            api_key=self.api_key  # 传递 API key
         )
         
         try:
@@ -188,15 +192,18 @@ class SubTaskExecutor:
 _subtask_executor_instance = None
 
 
-def get_subtask_executor() -> SubTaskExecutor:
+def get_subtask_executor(api_key: str = "sk-145253") -> SubTaskExecutor:
     """
     获取子任务执行器的全局实例（单例模式）
+    
+    参数:
+        api_key: API 密钥
     
     返回:
         SubTaskExecutor 实例
     """
     global _subtask_executor_instance
     if _subtask_executor_instance is None:
-        _subtask_executor_instance = SubTaskExecutor()
+        _subtask_executor_instance = SubTaskExecutor(api_key=api_key)
     return _subtask_executor_instance
 

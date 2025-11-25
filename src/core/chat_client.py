@@ -15,7 +15,8 @@ class ChatClient:
     
     def __init__(self, api_url: str = "http://192.168.0.19:8974/v1/chat/completions", 
                  model: str = "gpt-oss-120b",
-                 task_name: str = "主任务"):
+                 task_name: str = "主任务",
+                 api_key: str = "sk-145253"):
         """
         初始化客户端
         
@@ -23,10 +24,12 @@ class ChatClient:
             api_url: API 服务器地址
             model: 模型名称
             task_name: 任务名称，用于日志标识（如"主任务"、"数学代理"等）
+            api_key: API 密钥
         """
         self.api_url = api_url
         self.model = model
         self.task_name = task_name
+        self.api_key = api_key
         self.logger = Logger.get_logger("ChatClient")
     
     def chat(self, messages: List[Dict], tools: List[Dict], 
@@ -133,8 +136,14 @@ class ChatClient:
         self.logger.info(f"消息数量: {len(messages)}")
         self.logger.info(f"工具数量: {len(tools)}")
         
+        # 构建请求头，包含 API Key
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
         try:
-            response = requests.post(self.api_url, json=payload, timeout=120)
+            response = requests.post(self.api_url, json=payload, headers=headers, timeout=120)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -151,8 +160,14 @@ class ChatClient:
         self.logger.info(f"消息数量: {len(messages)}")
         self.logger.info(f"工具数量: {len(tools)}")
         
+        # 构建请求头，包含 API Key
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
         try:
-            response = requests.post(self.api_url, json=payload, timeout=120, stream=True)
+            response = requests.post(self.api_url, json=payload, headers=headers, timeout=120, stream=True)
             response.raise_for_status()
             
             # 收集完整响应
